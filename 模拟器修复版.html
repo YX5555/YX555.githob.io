@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>马斯克花钱模拟器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+        }
+        
+        .glow-red {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes count-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .count-animation {
+            animation: count-up 0.5s ease-out;
+        }
+        
+        .luxury-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .money-fly {
+            position: fixed;
+            font-size: 24px;
+            font-weight: bold;
+            color: #ef4444;
+            pointer-events: none;
+            z-index: 1000;
+            animation: fly-up 2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- 主要内容 -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">马斯克花钱模拟器</h1>
+        <p class="text-center text-gray-600 mb-12">体验成为世界首富，感受金钱的力量与意义</p>
+        
+        <!-- 游戏状态 -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-700">游戏状态</h2>
+                    <p class="text-gray-500">初始资产：5亿人民币</p>
+                </div>
+                <div class="mt-4 md:mt-0 text-right">
+                    <p class="text-sm text-gray-500">当前资产</p>
+                    <p class="text-4xl font-bold text-green-600" id="current-money">500,000,000</p>
+                    <p class="text-xs text-gray-400 mt-1">剩余时间：<span id="time-left">60</span>秒</p>
+                </div>
+            </div>
+            
+            <!-- 财经新闻滚动条 -->
+            <div class="overflow-hidden bg-gray-50 p-3 rounded">
+                <div class="flex whitespace-nowrap animate-marquee">
+                    <p class="text-gray-600 flex items-center">
+                        <span class="text-red-500 font-bold mr-2"><i class="fas fa-bolt"></i></span>
+                        马斯克又双叒叕减持特斯拉股票！套现超过30亿美元！
+                        <span class="mx-4">•</span>
+                        比特币价格再度暴涨，马斯克持仓价值增加20亿美元！
+                        <span class="mx-4">•</span>
+                        特斯拉Model 3销量创新高，股价上涨5%！
+                        <span class="mx-4">•</span>
+                        马斯克宣布SpaceX将发射新型火箭，估值提升至1000亿美元！
+                        <span class="mx-4">•</span>
+                        马斯克收购Twitter后的首次财报显示，营收同比增长30%！
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区域 -->
+        <div class="flex flex-col md:flex-row gap-8">
+            <!-- 消费项目列表 -->
+            <div class="w-full md:w-2/3">
+                <!-- 消费类别标签 -->
+                <div class="flex flex-wrap gap-2 mb-6">
+                    <button class="category-btn px-4 py-2 bg-blue-600 text-white rounded-full" data-category="all">全部</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="luxury">奢侈品</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="property">房产</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="travel">旅游</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="tech">科技</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="investment">投资</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="charity">慈善</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="health">健康</button>
+                    <button class="category-btn px-4 py-2 bg-gray-200 text-gray-700 rounded-full" data-category="entertainment">娱乐</button>
+                </div>
+                
+                <!-- 搜索框 -->
+                <div class="relative mb-6">
+                    <input type="text" id="search-input" placeholder="搜索消费项目..." class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                
+                <!-- 消费项目网格 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="items-grid">
+                    <!-- 项目会通过JavaScript动态生成 -->
+                </div>
+            </div>
+            
+            <!-- 右侧面板 -->
+            <div class="w-full md:w-1/3">
+                <!-- 购买历史 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                        <i class="fas fa-history mr-2 text-blue-500"></i>
+                        购买历史
+                    </h3>
+                    <div class="space-y-4 max-h-80 overflow-y-auto" id="purchase-history">
+                        <p class="text-gray-400 text-center italic">暂无购买记录</p>
+                    </div>
+                </div>
+                
+                <!-- 统计信息 -->
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                        <i class="fas fa-chart-pie mr-2 text-green-500"></i>
+                        消费统计
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">总花费</span>
+                            <span class="font-bold text-red-500" id="total-spent">¥0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">购买次数</span>
+                            <span class="font-bold" id="purchase-count">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">最贵购买</span>
+                            <span class="font-bold" id="most-expensive">--</span>
+                        </div>
+                    </div>
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <h4 class="font-bold text-gray-700 mb-3">消费类别分布</h4>
+                        <div class="space-y-2" id="category-stats">
+                            <!-- 类别统计会动态生成 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 模态框 -->
+    <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h2 class="text-2xl font-bold text-gray-800" id="modal-title">项目详情</h2>
+                    <button id="close-modal" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mt-6">
+                    <div class="relative">
+                        <img id="modal-image" src="" alt="项目图片" class="w-full h-64 object-cover rounded-lg">
+                        <span id="modal-price" class="absolute bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg text-xl font-bold"></span>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <div class="flex items-center mb-4">
+                            <span id="modal-category" class="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium"></span>
+                            <span class="mx-2 text-gray-300">•</span>
+                            <span id="modal-rarity" class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-sm font-medium"></span>
+                        </div>
+                        
+                        <p id="modal-description" class="text-gray-600 leading-relaxed mb-6"></p>
+                        
+                        <div class="flex items-center justify-between">
+                            <button id="buy-now" class="px-6 py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors flex items-center">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                立即购买
+                            </button>
+                            <button id="add-to-wishlist" class="px-4 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 游戏结束模态框 -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
+            <div class="text-center">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">游戏结束！</h2>
+                <p class="text-gray-600 mb-6">时间到！看看你在这一分钟内做了什么...</p>
+                
+                <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-gray-600">总花费</span>
+                        <span class="font-bold text-red-500" id="final-total-spent">¥0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-gray-600">剩余资产</span>
+                        <span class="font-bold text-green-500" id="final-money">¥0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-gray-600">购买次数</span>
+                        <span class="font-bold" id="final-purchase-count">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">最贵购买</span>
+                        <span class="font-bold" id="final-most-expensive">--</span>
+                    </div>
+                </div>
+                
+                <button id="restart-game" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors">
+                    再来一局
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 游戏数据
+        const gameState = {
+            initialMoney: 500000000, // 5亿人民币
+            currentMoney: 500000000,
+            timeLeft: 60,
+            isPlaying: true,
+            purchaseHistory: [],
+            categoryStats: {
+                luxury: { name: '奢侈品', count: 0, total: 0 },
+                property: { name: '房产', count: 0, total: 0 },
+                travel: { name: '旅游', count: 0, total: 0 },
+                tech: { name: '科技', count: 0, total: 0 },
+                investment: { name: '投资', count: 0, total: 0 },
+                charity: { name: '慈善', count: 0, total: 0 },
+                health: { name: '健康', count: 0, total: 0 },
+                entertainment: { name: '娱乐', count: 0, total: 0 }
+            },
+            mostExpensivePurchase: null
+        };
+        
+        // 商品数据
+        const items = [
+            // 奢侈品类别
+            {
+                id: 1,
+                name: '保时捷911 Turbo S',
+                price: 3500000,
+                category: 'luxury',
+                rarity: '稀有',
+                description: '经典保时捷跑车，搭载3.8升双涡轮增压水平对置六缸发动机，0-100km/h加速仅需2.7秒，最高时速可达330km/h。顶级的驾驶体验和豪华内饰，彰显非凡品味。',
+                image: 'https://picsum.photos/seed/sports-car/400/300.jpg'
+            },
+            {
+                id: 2,
+                name: '百达翡丽鹦鹉螺腕表',
+                price: 6800000,
+                category: 'luxury',
+                rarity: '珍稀',
+                description: '百达翡丽标志性腕表系列，18K玫瑰金表壳，蓝宝石水晶表镜，自动上链机械机芯，动力储存约70小时。经典的运动优雅风格，是收藏家的梦想之选。',
+                image: 'https://picsum.photos/seed/patek-watch/400/300.jpg'
+            },
+            // 房产类别
+            {
+                id: 3,
+                name: '上海汤臣一品顶层公寓',
+                price: 120000000,
+                category: 'property',
+                rarity: '传说',
+                description: '上海浦东陆家嘴核心区域顶级豪宅，面积约680平方米，360度全景落地窗俯瞰黄浦江美景。豪华装修，智能家居系统，私人电梯直接入户，象征身份地位的顶级居所。',
+                image: 'https://picsum.photos/seed/shanghai-penthouse/400/300.jpg'
+            },
+            // 旅游类别
+            {
+                id: 4,
+                name: '马尔代夫私人岛屿度假',
+                price: 5800000,
+                category: 'travel',
+                rarity: '珍稀',
+                description: '包下整个马尔代夫私人岛屿，享受7天6晚的极致奢华度假体验。私人管家、潜水教练、SPA服务，所有顶级享受应有尽有。还可安排专属直升机接送。',
+                image: 'https://picsum.photos/seed/maldives-resort/400/300.jpg'
+            },
+            {
+                id: 5,
+                name: '全球米其林三星美食之旅',
+                price: 2600000,
+                category: 'travel',
+                rarity: '稀有',
+                description: '为期一个月的环球美食之旅，走访全球20家米其林三星餐厅，品尝顶级厨师精心准备的料理。全程私人飞机接送，入住当地最高端酒店，体验真正的舌尖上的环球旅行。',
+                image: 'https://picsum.photos/seed/michelin-dining-tour/400/300.jpg'
+            },
+            // 科技类别
+            {
+                id: 6,
+                name: '当代艺术大师原作',
+                price: 85000000,
+                category: 'investment',
+                rarity: '传说',
+                description: '收藏一幅当代艺术大师的原作，具有极高的艺术价值和投资潜力。作品将由专业团队进行鉴定、保险和安装，为您的收藏室增添不可估量的价值。',
+                image: 'https://picsum.photos/seed/contemporary-art/400/300.jpg'
+            },
+            {
+                id: 7,
+                name: 'AI创业公司天使投资',
+                price: 10000000,
+                category: 'investment',
+                rarity: '稀有',
+                description: '向一家极具潜力的AI创业公司进行天使轮投资，获取10%的股权。这家公司的技术团队来自顶尖科技公司和研究机构，拥有多项核心专利技术。',
+                image: 'https://picsum.photos/seed/ai-startup-investment/400/300.jpg'
+            },
+            {
+                id: 8,
+                name: '顶级工作站配置',
+                price: 120000,
+                category: 'tech',
+                rarity: '普通',
+                description: '定制的顶级PC工作站，搭载最新Intel i9处理器、64GB内存、2TB SSD、RTX 4090显卡，专业水冷散热系统。适合专业设计师、游戏开发者和AI研究者使用。',
+                image: 'https://picsum.photos/seed/high-end-workstation/400/300.jpg'
+            },
+            {
+                id: 9,
+                name: '区块链NFT项目投资',
+                price: 3500000,
+                category: 'investment',
+                rarity: '稀有',
+                description: '投资一个备受瞩目的NFT项目，获得限量版数字艺术品和项目治理权。该项目由知名艺术家和区块链专家联合打造，具有广阔的发展前景。',
+                image: 'https://picsum.photos/seed/blockchain-nft/400/300.jpg'
+            },
+            {
+                id: 10,
+                name: 'VR/AR体验室',
+                price: 850000,
+                category: 'tech',
+                rarity: '稀有',
+                description: '在您的家中打造一个专业级别的VR/AR体验室，配备全套顶级VR头显、动作捕捉系统、环绕音响和定制空间设计。感受沉浸式虚拟世界的魅力。',
+                image: 'https://picsum.photos/seed/vr-ar-experience/400/300.jpg'
+            },
+            // 健康类别
+            {
+                id: 11,
+                name: '私人健身房会员',
+                price: 68000,
+                category: 'health',
+                rarity: '普通',
+                description: '顶级私人健身房的年度会员，提供专属健身教练、定制训练计划、营养咨询和康复治疗服务。24小时开放，配备最先进的健身设备。',
+                image: 'https://picsum.photos/seed/private-gym-membership/400/300.jpg'
+            },
+            // 旅行类别
+            {
+                id: 12,
+                name: '环球商务舱机票',
+                price: 180000,
+                category: 'travel',
+                rarity: '普通',
+                description: '一年期环球商务舱机票，可无限次乘坐多家顶级航空公司的商务舱，飞往全球各大城市。享受机场贵宾室、优先值机和行李托运等特权。',
+                image: 'https://picsum.photos/seed/business-class-flight/400/300.jpg'
+            },
+            // 教育类别
+            {
+                id: 13,
+                name: 'EMBA高管课程',
+                price: 680000,
+                category: 'investment',
+                rarity: '稀有',
+                description: '世界顶级商学院的EMBA课程，为期两年，包括课堂学习、案例研讨、国际交流和企业参访等环节。与各行各业的精英人士交流学习，拓展人脉网络。',
+                image: 'https://picsum.photos/seed/emba-course/400/300.jpg'
+            },
+            // 慈善类别
+            {
+                id: 14,
+                name: '山区小学捐赠',
+                price: 1200000,
+                category: 'charity',
+                rarity: '稀有',
+                description: '为贫困山区捐赠一所希望小学，包括教学楼建设、教学设备购置和师资培训等。让更多孩子能够接受教育，改变命运。捐赠后可获得学校命名权。',
+                image: 'https://picsum.photos/seed/mountain-school-donation/400/300.jpg'
+            },
+            // 健康类别
+            {
+                id: 15,
+                name: '高端体检套餐',
+                price: 38000,
+                category: 'health',
+                rarity: '普通',
+                description: '全面的高端体检套餐，包括基因检测、全身PET-CT、心脏超声等多项先进检查项目。由国内外顶级医学专家亲自解读报告，提供个性化健康管理方案。',
+                image: 'https://picsum.photos/seed/premium-health-checkup/400/300.jpg'
+            },
+            // 娱乐类别
+            {
+                id: 16,
+                name: '24小时流媒体服务包年',
+                price: 2800,
+                category: 'entertainment',
+                rarity: '普通',
+                description: '所有主流流媒体平台的年度会员，包括电影、电视剧、音乐、游戏等各类娱乐内容。享受4K超高清画质、杜比全景声和独家内容。',
+                image: 'https://picsum.photos/seed/24hour-streaming/400/300.jpg'
+            },
+            // 科技类别
+            {
+                id: 17,
+                name: '人形机器人',
+                price: 1500000,
+                category: 'tech',
+                rarity: '珍稀',
+                description: '最新一代人形智能机器人，具备先进的计算机视觉、自然语言处理和运动控制能力。可以协助完成家务、提供安全监护、陪伴聊天等多种功能。',
+                image: 'https://picsum.photos/seed/humanoid-robot/400/300.jpg'
+            },
+            // 体验类别
+            {
+                id: 18,
+                name: '太空边缘体验',
+                price: 2800000,
+                category: 'entertainment',
+                rarity: '珍稀',
+                description: '乘坐特制的高空飞行器，体验接近太空边缘的感觉，欣赏地球曲率和浩瀚星空。这是普通人能够接近太空的最直接方式之一。',
+                image: 'https://picsum.photos/seed/space-edge-experience/400/300.jpg'
+            },
+            // 奢侈品类别
+            {
+                id: 19,
+                name: '钻石镶嵌手机',
+                price: 12000000,
+                category: 'luxury',
+                rarity: '珍稀',
+                description: '定制版钻石镶嵌智能手机，机身镶嵌数千颗高品质钻石和宝石，采用18K黄金打造边框。内置顶级硬件配置和专属定制软件，全球限量发行。',
+                image: 'https://picsum.photos/seed/diamond-encrusted-phone/400/300.jpg'
+            },
+            // 投资类别
+            {
+                id: 20,
+                name: '葡萄酒庄园',
+                price: 35000000,
+                category: 'investment',
+                rarity: '珍稀',
+                description: '法国波尔多地区的一座历史悠久的葡萄酒庄园，拥有优质葡萄园、酒窖和古堡。每年可产出数千瓶顶级红酒，具有极高的收藏价值和投资回报。',
+                image: 'https://picsum.photos/seed/wine-estate/400/300.jpg'
+            },
+            // 房产类别
+            {
+                id: 21,
+                name: '私人岛屿',
+                price: 80000000,
+                category: 'property',
+                rarity: '传说',
+                description: '位于加勒比海的私人岛屿，面积约50英亩，拥有洁白的沙滩、清澈的海水和茂密的热带植被。岛上已建有豪华度假别墅、私人码头和直升机停机坪。',
+                image: 'https://picsum.photos/seed/private-island/400/300.jpg'
+            }
+        ];
+        
+        // 初始化游戏
+        function initGame() {
+            renderItems();
+            updateGameStats();
+            startGameTimer();
+            setupEventListeners();
+        }
+        
+        // 渲染商品列表
+        function renderItems(filteredItems = items) {
+            const itemsGrid = document.getElementById('items-grid');
+            itemsGrid.innerHTML = '';
+            
+            if (filteredItems.length === 0) {
+                itemsGrid.innerHTML = '<p class="text-gray-400 text-center italic">未找到匹配的项目</p>';
+                return;
+            }
+            
+            filteredItems.forEach(item => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'bg-white rounded-lg shadow-md overflow-hidden card-hover';
+                itemCard.innerHTML = `
+                    <div class="relative">
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-cover">
+                        <span class="absolute top-3 right-3 bg-green-600 text-white px-3 py-1 rounded text-sm font-bold">¥${formatNumber(item.price)}</span>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex items-center mb-2">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded text-xs font-medium">${getCategoryName(item.category)}</span>
+                            <span class="mx-2 text-gray-300">•</span>
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-600 rounded text-xs font-medium">${item.rarity}</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 mb-2 line-clamp-1">${item.name}</h3>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">${item.description}</p>
+                        <button class="view-details-btn w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors" data-id="${item.id}">查看详情</button>
+                    </div>
+                `;
+                itemsGrid.appendChild(itemCard);
+            });
+            
+            // 添加查看详情按钮事件
+            document.querySelectorAll('.view-details-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const itemId = parseInt(e.currentTarget.dataset.id);
+                    showItemDetails(itemId);
+                });
+            });
+        }
+        
+        // 显示商品详情
+        function showItemDetails(itemId) {
+            const item = items.find(item => item.id === itemId);
+            if (!item) return;
+            
+            const modal = document.getElementById('item-modal');
+            document.getElementById('modal-title').textContent = item.name;
+            document.getElementById('modal-image').src = item.image;
+            document.getElementById('modal-image').alt = item.name;
+            document.getElementById('modal-price').textContent = `¥${formatNumber(item.price)}`;
+            document.getElementById('modal-category').textContent = getCategoryName(item.category);
+            document.getElementById('modal-rarity').textContent = item.rarity;
+            document.getElementById('modal-description').textContent = item.description;
+            
+            // 保存当前选中的商品ID
+            document.getElementById('buy-now').dataset.id = itemId;
+            
+            modal.classList.remove('hidden');
+        }
+        
+        // 购买商品
+        function purchaseItem(itemId) {
+            const item = items.find(item => item.id === itemId);
+            if (!item || gameState.currentMoney < item.price || !gameState.isPlaying) return;
+            
+            // 更新游戏状态
+            gameState.currentMoney -= item.price;
+            gameState.purchaseHistory.unshift({
+                item: item,
+                timestamp: new Date()
+            });
+            
+            // 更新类别统计
+            gameState.categoryStats[item.category].count++;
+            gameState.categoryStats[item.category].total += item.price;
+            
+            // 更新最贵购买
+            if (!gameState.mostExpensivePurchase || item.price > gameState.mostExpensivePurchase.price) {
+                gameState.mostExpensivePurchase = item;
+            }
+            
+            // 更新UI
+            updateGameStats();
+            renderPurchaseHistory();
+            renderCategoryStats();
+            showMoneyFlyAnimation();
+            
+            // 关闭模态框
+            document.getElementById('item-modal').classList.add('hidden');
+        }
+        
+        // 更新游戏统计
+        function updateGameStats() {
+            document.getElementById('current-money').textContent = formatNumber(gameState.currentMoney);
+            document.getElementById('time-left').textContent = gameState.timeLeft;
+            
+            const totalSpent = gameState.initialMoney - gameState.currentMoney;
+            document.getElementById('total-spent').textContent = `¥${formatNumber(totalSpent)}`;
+            document.getElementById('purchase-count').textContent = gameState.purchaseHistory.length;
+            
+            if (gameState.mostExpensivePurchase) {
+                document.getElementById('most-expensive').textContent = `${gameState.mostExpensivePurchase.name} (¥${formatNumber(gameState.mostExpensivePurchase.price)})`;
+            }
+            
+            // 更新游戏结束统计
+            document.getElementById('final-total-spent').textContent = `¥${formatNumber(totalSpent)}`;
+            document.getElementById('final-money').textContent = `¥${formatNumber(gameState.currentMoney)}`;
+            document.getElementById('final-purchase-count').textContent = gameState.purchaseHistory.length;
+            
+            if (gameState.mostExpensivePurchase) {
+                document.getElementById('final-most-expensive').textContent = `${gameState.mostExpensivePurchase.name} (¥${formatNumber(gameState.mostExpensivePurchase.price)})`;
+            }
+        }
+        
+        // 渲染购买历史
+        function renderPurchaseHistory() {
+            const historyContainer = document.getElementById('purchase-history');
+            
+            if (gameState.purchaseHistory.length === 0) {
+                historyContainer.innerHTML = '<p class="text-gray-400 text-center italic">暂无购买记录</p>';
+                return;
+            }
+            
+            historyContainer.innerHTML = '';
+            gameState.purchaseHistory.forEach((purchase, index) => {
+                const item = purchase.item;
+                const historyItem = document.createElement('div');
+                historyItem.className = 'flex items-start p-3 border-b border-gray-100';
+                historyItem.innerHTML = `
+                    <img src="${item.image}" alt="${item.name}" class="w-16 h-16 object-cover rounded mr-3">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-medium text-gray-800 line-clamp-1">${item.name}</h4>
+                            <span class="text-red-500 font-bold">-¥${formatNumber(item.price)}</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">刚刚</p>
+                    </div>
+                `;
+                historyContainer.appendChild(historyItem);
+                
+                // 添加动画效果
+                setTimeout(() => {
+                    historyItem.classList.add('count-animation');
+                }, 10 * index);
+            });
+        }
+        
+        // 渲染类别统计
+        function renderCategoryStats() {
+            const statsContainer = document.getElementById('category-stats');
+            statsContainer.innerHTML = '';
+            
+            Object.entries(gameState.categoryStats).forEach(([key, stat]) => {
+                if (stat.count > 0) {
+                    const statItem = document.createElement('div');
+                    statItem.className = 'flex justify-between items-center';
+                    statItem.innerHTML = `
+                        <span class="text-gray-600">${stat.name}</span>
+                        <span class="font-bold">${stat.count}件 (¥${formatNumber(stat.total)})</span>
+                    `;
+                    statsContainer.appendChild(statItem);
+                }
+            });
+        }
+        
+        // 开始游戏计时器
+        function startGameTimer() {
+            const timerInterval = setInterval(() => {
+                if (!gameState.isPlaying) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                
+                gameState.timeLeft--;
+                updateGameStats();
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                } else if (gameState.timeLeft <= 10) {
+                    document.getElementById('time-left').classList.add('text-red-500', 'glow-red');
+                }
+            }, 1000);
+        }
+        
+        // 结束游戏
+        function endGame() {
+            gameState.isPlaying = false;
+            document.getElementById('game-over-modal').classList.remove('hidden');
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            // 重置游戏状态
+            gameState.currentMoney = gameState.initialMoney;
+            gameState.timeLeft = 60;
+            gameState.isPlaying = true;
+            gameState.purchaseHistory = [];
+            gameState.mostExpensivePurchase = null;
+            
+            // 重置类别统计
+            Object.keys(gameState.categoryStats).forEach(key => {
+                gameState.categoryStats[key].count = 0;
+                gameState.categoryStats[key].total = 0;
+            });
+            
+            // 更新UI
+            updateGameStats();
+            renderPurchaseHistory();
+            renderCategoryStats();
+            
+            // 移除时间警告样式
+            document.getElementById('time-left').classList.remove('text-red-500', 'glow-red');
+            
+            // 关闭模态框
+            document.getElementById('game-over-modal').classList.add('hidden');
+            
+            // 重新开始计时器
+            startGameTimer();
+        }
+        
+        // 显示金钱飞行动画
+        function showMoneyFlyAnimation() {
+            const moneyElement = document.createElement('div');
+            moneyElement.className = 'money-fly';
+            moneyElement.textContent = '💰';
+            
+            // 随机位置
+            const randomX = Math.random() * (window.innerWidth - 50);
+            moneyElement.style.left = `${randomX}px`;
+            moneyElement.style.bottom = '-50px';
+            
+            document.body.appendChild(moneyElement);
+            
+            // 动画结束后移除元素
+            setTimeout(() => {
+                moneyElement.remove();
+            }, 2000);
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 关闭模态框
+            document.getElementById('close-modal').addEventListener('click', () => {
+                document.getElementById('item-modal').classList.add('hidden');
+            });
+            
+            // 购买按钮
+            document.getElementById('buy-now').addEventListener('click', (e) => {
+                const itemId = parseInt(e.currentTarget.dataset.id);
+                purchaseItem(itemId);
+            });
+            
+            // 重新开始游戏
+            document.getElementById('restart-game').addEventListener('click', restartGame);
+            
+            // 分类筛选
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const category = e.currentTarget.dataset.category;
+                    
+                    // 更新按钮样式
+                    document.querySelectorAll('.category-btn').forEach(b => {
+                        b.classList.remove('bg-blue-600', 'text-white');
+                        b.classList.add('bg-gray-200', 'text-gray-700');
+                    });
+                    e.currentTarget.classList.remove('bg-gray-200', 'text-gray-700');
+                    e.currentTarget.classList.add('bg-blue-600', 'text-white');
+                    
+                    // 筛选商品
+                    let filteredItems = items;
+                    if (category !== 'all') {
+                        filteredItems = items.filter(item => item.category === category);
+                    }
+                    
+                    // 应用搜索筛选
+                    const searchQuery = document.getElementById('search-input').value.toLowerCase();
+                    if (searchQuery) {
+                        filteredItems = filteredItems.filter(item => 
+                            item.name.toLowerCase().includes(searchQuery) ||
+                            item.description.toLowerCase().includes(searchQuery)
+                        );
+                    }
+                    
+                    renderItems(filteredItems);
+                });
+            });
+            
+            // 搜索功能
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                const searchQuery = e.target.value.toLowerCase();
+                
+                // 获取当前选中的分类
+                let activeCategory = 'all';
+                document.querySelectorAll('.category-btn').forEach(btn => {
+                    if (btn.classList.contains('bg-blue-600')) {
+                        activeCategory = btn.dataset.category;
+                    }
+                });
+                
+                // 筛选商品
+                let filteredItems = items;
+                if (activeCategory !== 'all') {
+                    filteredItems = items.filter(item => item.category === activeCategory);
+                }
+                
+                if (searchQuery) {
+                    filteredItems = filteredItems.filter(item => 
+                        item.name.toLowerCase().includes(searchQuery) ||
+                        item.description.toLowerCase().includes(searchQuery)
+                    );
+                }
+                
+                renderItems(filteredItems);
+            });
+        }
+        
+        // 工具函数
+        function formatNumber(num) {
+            return num.toLocaleString('zh-CN');
+        }
+        
+        function getCategoryName(categoryKey) {
+            const categoryMap = {
+                luxury: '奢侈品',
+                property: '房产',
+                travel: '旅游',
+                tech: '科技',
+                investment: '投资',
+                charity: '慈善',
+                health: '健康',
+                entertainment: '娱乐'
+            };
+            return categoryMap[categoryKey] || categoryKey;
+        }
+        
+        // 页面加载完成后初始化游戏
+        window.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
